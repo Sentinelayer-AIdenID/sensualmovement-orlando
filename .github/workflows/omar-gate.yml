@@ -1,8 +1,10 @@
 name: Omar Gate
 
+# Runs on pull requests only. The action adjudicates a PR (it needs the PR
+# number); on a plain push there is none and the bridge step errors out, so
+# every push showed as a red run while the actual gates were clean.
+# Enforcement = branch protection on main requiring the "omar-gate" check.
 on:
-  push:
-    branches: [ main, feat/* ]
   pull_request:
     branches: [ main ]
 
