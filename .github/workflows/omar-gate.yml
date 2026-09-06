@@ -1,0 +1,27 @@
+name: Omar Gate
+
+on:
+  push:
+    branches: [ main, feat/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  omar-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Omar Gate Scan
+        uses: mrrCarter/sentinelayer-v1-action@v1
+        with:
+          sentinelayer_token: ${{ secrets.SENTINELAYER_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          model: 'gpt-5.3-codex'
+          codex_model: 'gpt-5.3-codex'
+          scan_mode: 'deep'
+          severity_gate: 'P1'
+          pr_number: ${{ github.event.pull_request.number }}
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
