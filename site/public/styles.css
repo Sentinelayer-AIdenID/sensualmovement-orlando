@@ -602,7 +602,7 @@ main { position: relative; z-index: 3; }
 .globe__head { display: grid; justify-items: center; gap: .45rem; }
 .big--map { font-size: clamp(2rem, 6vw, 5.4rem); opacity: 0; }
 .globe__head .sub { opacity: 0; }
-.globe__stage { position: relative; width: min(100%, calc(100svh - 25rem), 46rem); aspect-ratio: 1 / 1; opacity: 0; transform: scale(.86); }
+.globe__stage { position: relative; width: min(100%, calc(100svh - 26.5rem), 46rem); aspect-ratio: 1 / 1; opacity: 0; transform: scale(.86); }
 #globe { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: pan-y; cursor: grab; }
 .globe__foot { display: grid; justify-items: center; gap: .55rem; }
 .globe__hint { margin: 0; font: italic .82rem/1.3 Lora, Georgia, serif; color: var(--ink-soft); }
