@@ -230,7 +230,12 @@
           <p class="kicker" data-i18n="world.kicker">The world</p>
           <h2 class="big big--map" data-i18n="world.title">One family. Seven cities.</h2>
           <p class="sub" data-i18n="world.sub">Every festival, social and class they have announced, on one globe.</p>
+          <div class="view" id="world-view" role="tablist">
+            <button type="button" class="view__btn" data-view="globe" role="tab" data-i18n="world.viewGlobe">Globe</button>
+            <button type="button" class="view__btn" data-view="list" role="tab" data-i18n="world.viewList">List</button>
+          </div>
         </div>
+        <ol class="wlist" id="world-list" hidden></ol>
         <div class="globe__stage" id="globe-stage">
           <canvas id="globe" role="img" aria-label="Globe of Sensual Movement cities"></canvas>
           <div class="gcard" id="gcard" hidden></div>

@@ -23,10 +23,11 @@ window.SMGlobe = (() => {
     let running = false, raf = 0, last = 0, idleAt = 0;
 
     // Precompute unit vectors for the land dots.
-    const N = land.length / 2;
+    const stride = coarse ? 2 : 1; /* patch8 */
+    const N = Math.floor(land.length / 2 / stride);
     const LX = new Float32Array(N), LY = new Float32Array(N), LZ = new Float32Array(N);
     for (let i = 0; i < N; i++) {
-      const la = rad(land[i * 2] / 10), lo = rad(land[i * 2 + 1] / 10);
+      const la = rad(land[i * 2 * stride] / 10), lo = rad(land[i * 2 * stride + 1] / 10);
       LX[i] = Math.cos(la) * Math.sin(lo);
       LY[i] = Math.sin(la);
       LZ[i] = Math.cos(la) * Math.cos(lo);
@@ -87,6 +88,12 @@ window.SMGlobe = (() => {
       return { R, cx, cy };
     };
 
+    const BUCKETS = 12;
+    const BIN = Array.from({ length: BUCKETS }, () => []);
+    const FILL = Array.from({ length: BUCKETS }, (_, b) => {
+      const z = (b + 0.5) / BUCKETS;
+      return `rgba(${COL.white},${(0.14 + 0.62 * z * z).toFixed(3)})`;
+    });
     let pulseT = 0;
     const draw = (dt) => {
       pulseT += dt;
@@ -125,9 +132,11 @@ window.SMGlobe = (() => {
         ctx.stroke();
       }
 
-      // land
+      // land — dots are binned by brightness so the fill style changes a
+      // dozen times a frame, not once per dot (that was the lag).
       const cyaw = Math.cos(S.yaw), syaw = Math.sin(S.yaw), cp = Math.cos(S.pitch), sp = Math.sin(S.pitch);
       const dot = Math.max(0.9, R / 260);
+      for (let b = 0; b < BUCKETS; b++) BIN[b].length = 0;
       for (let i = 0; i < N; i++) {
         const x = LX[i], y = LY[i], z = LZ[i];
         const x1 = x * cyaw + z * syaw;
@@ -135,10 +144,16 @@ window.SMGlobe = (() => {
         const y2 = y * cp - z1 * sp;
         const z2 = y * sp + z1 * cp;
         if (z2 <= 0.02) continue;
-        const a = 0.14 + 0.62 * z2 * z2;
-        ctx.fillStyle = `rgba(${COL.white},${a.toFixed(3)})`;
-        const s = dot * (0.7 + 0.8 * z2);
-        ctx.fillRect(cx + x1 * R - s / 2, cy - y2 * R - s / 2, s, s);
+        const b = Math.min(BUCKETS - 1, Math.floor(z2 * BUCKETS));
+        BIN[b].push(cx + x1 * R, cy - y2 * R);
+      }
+      for (let b = 0; b < BUCKETS; b++) {
+        const pts = BIN[b];
+        if (!pts.length) continue;
+        ctx.fillStyle = FILL[b];
+        const s = dot * (0.7 + 0.8 * ((b + 0.5) / BUCKETS));
+        const h = s / 2;
+        for (let k = 0; k < pts.length; k += 2) ctx.fillRect(pts[k] - h, pts[k + 1] - h, s, s);
       }
 
       // front pins
@@ -239,11 +254,18 @@ window.SMGlobe = (() => {
     /* ---- pointer: drag to spin, tap a light ---- */
     let px = 0, py = 0, moved = 0, downAt = 0;
     const hist = [];
+    const HIT = coarse ? 34 : 26;
     const nearest = (x, y) => {
-      let best = null, bd = 22 * 22;
+      let best = null, bd = HIT * HIT;
       for (const p of P) {
         if (p.z <= 0.05) continue;
-        const d = (p.sx - x) ** 2 + (p.sy - y) ** 2;
+        // the pin itself…
+        let d = (p.sx - x) ** 2 + (p.sy - y) ** 2;
+        // …or its label, drawn to the right of it
+        if (p.label && (p.festival || p.z > 0.55)) {
+          const lw = p.label.length * 9 * Math.min(1.35, S.zoom) + 12;
+          if (x > p.sx + 6 && x < p.sx + lw && Math.abs(y - p.sy) < 12) d = 0;
+        }
         if (d < bd) (bd = d), (best = p);
       }
       return best;
@@ -309,7 +331,11 @@ window.SMGlobe = (() => {
       }
     };
     canvas.addEventListener("pointerup", up);
-    canvas.addEventListener("pointercancel", up);
+    canvas.addEventListener("pointercancel", () => {
+      S.dragging = false;
+      hist.length = 0;
+      idleAt = performance.now();
+    });
     canvas.addEventListener("pointerleave", () => {
       if (!S.dragging) (S.hover = null), (canvas.style.cursor = "grab");
     });

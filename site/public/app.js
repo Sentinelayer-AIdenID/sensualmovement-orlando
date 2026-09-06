@@ -452,11 +452,11 @@
           const f = festivalById(it.ref);
           const r = rank(f.id);
           const badge = r ? `<span class="gcard__badge${r === "then" ? " gcard__badge--then" : ""}">${t.world[r]}</span>` : "";
-          return `<li class="gitem gitem--festival"><span class="gitem__kind">${t.world.kinds.festival} ${badge}</span><p class="gitem__name">${f.name}</p><p class="gitem__meta">${fmtDates(f)} · ${f.venue}</p><ul class="gitem__links"><li><a href="${f.tickets}" target="_blank" rel="noopener noreferrer">${t.map.tickets}</a></li>${f.hotel ? `<li><a href="${f.hotel}" target="_blank" rel="noopener noreferrer">${t.map.hotel}</a></li>` : ""}<li><a href="${f.page}" target="_blank" rel="noopener noreferrer">${t.map.page}</a></li></ul></li>`;
+          return `<li class="gitem gitem--festival${f.image ? " gitem--img" : ""}">${f.image ? `<img class="gitem__img" src="${f.image}" alt="" loading="lazy" decoding="async">` : ""}<span class="gitem__kind">${t.world.kinds.festival} ${badge}</span><p class="gitem__name">${f.name}</p><p class="gitem__meta">${fmtDates(f)} · ${f.venue}</p><ul class="gitem__links"><li><a href="${f.tickets}" target="_blank" rel="noopener noreferrer">${t.map.tickets}</a></li>${f.hotel ? `<li><a href="${f.hotel}" target="_blank" rel="noopener noreferrer">${t.map.hotel}</a></li>` : ""}<li><a href="${f.page}" target="_blank" rel="noopener noreferrer">${t.map.page}</a></li></ul></li>`;
         }
         const when = it.when ? it.when[lang] || it.when.en : "";
         const meta = [when, it.venue].filter(Boolean).join(" · ");
-        return `<li class="gitem gitem--${it.kind}"><span class="gitem__kind">${t.world.kinds[it.kind] || it.kind}</span><p class="gitem__name">${it.name}</p>${meta ? `<p class="gitem__meta">${meta}</p>` : ""}<ul class="gitem__links"><li><a href="${it.url}" target="_blank" rel="noopener noreferrer">${t.map.page}</a></li></ul></li>`;
+        return `<li class="gitem gitem--${it.kind}${it.image ? " gitem--img" : ""}">${it.image ? `<img class="gitem__img" src="${it.image}" alt="" loading="lazy" decoding="async">` : ""}<span class="gitem__kind">${t.world.kinds[it.kind] || it.kind}</span><p class="gitem__name">${it.name}</p>${meta ? `<p class="gitem__meta">${meta}</p>` : ""}<ul class="gitem__links"><li><a href="${it.url}" target="_blank" rel="noopener noreferrer">${t.map.page}</a></li></ul></li>`;
       })
       .join("");
     const fest = p.items.find((it) => it.kind === "festival");
@@ -464,6 +464,64 @@
     gcard.innerHTML = `<button type="button" class="gcard__close" aria-label="${t.world.close}">&times;</button><p class="gcard__city">${t.cities[p.city]}${r ? `<span class="gcard__badge${r === "then" ? " gcard__badge--then" : ""}">${t.world[r]}</span>` : ""}</p><ul class="gcard__items">${items}</ul>`;
     $(".gcard__close", gcard).addEventListener("click", () => globe && globe.blur());
   };
+
+  /* The list: the same cities and items as the globe, as cards, with the
+     pictures from their pages. Default on phones; a toggle on desktop. */
+  const VIEW_KEY = "sm-world-view";
+  const worldScene = $("#s-globe");
+  const worldList = $("#world-list");
+  const viewBtns = $$("#world-view .view__btn");
+  const itemHTML = (it, t, rank) => {
+    if (it.kind === "festival") {
+      const f = festivalById(it.ref);
+      const r = rank(f.id);
+      const badge = r ? `<span class="gcard__badge${r === "then" ? " gcard__badge--then" : ""}">${t.world[r]}</span>` : "";
+      return `<li class="witem witem--festival${f.image ? "" : " witem--noimg"}">${f.image ? `<img class="witem__img" src="${f.image}" alt="" loading="lazy" decoding="async">` : ""}<div><span class="gitem__kind">${t.world.kinds.festival} ${badge}</span><p class="gitem__name">${f.name}</p><p class="gitem__meta">${fmtDates(f)} · ${f.venue}</p><ul class="gitem__links"><li><a href="${f.tickets}" target="_blank" rel="noopener noreferrer">${t.map.tickets}</a></li>${f.hotel ? `<li><a href="${f.hotel}" target="_blank" rel="noopener noreferrer">${t.map.hotel}</a></li>` : ""}<li><a href="${f.page}" target="_blank" rel="noopener noreferrer">${t.map.page}</a></li></ul></div></li>`;
+    }
+    const when = it.when ? it.when[lang] || it.when.en : "";
+    const meta = [when, it.venue].filter(Boolean).join(" · ");
+    return `<li class="witem witem--${it.kind}${it.image ? "" : " witem--noimg"}">${it.image ? `<img class="witem__img" src="${it.image}" alt="" loading="lazy" decoding="async">` : ""}<div><span class="gitem__kind">${t.world.kinds[it.kind] || it.kind}</span><p class="gitem__name">${it.name}</p>${meta ? `<p class="gitem__meta">${meta}</p>` : ""}<ul class="gitem__links"><li><a href="${it.url}" target="_blank" rel="noopener noreferrer">${t.map.page}</a></li></ul></div></li>`;
+  };
+  const buildWorldList = () => {
+    const t = I18N[lang];
+    const up = upcoming();
+    const rank = (fid) => (up[0] && up[0].id === fid ? "next" : up[1] && up[1].id === fid ? "then" : null);
+    // cities in the order of their next thing: festivals by date first, then the rest
+    const order = [...PLACES].sort((x, y) => {
+      const fx = x.items.find((i) => i.kind === "festival"), fy = y.items.find((i) => i.kind === "festival");
+      const dx = fx ? festivalById(fx.ref).start : "9999", dy = fy ? festivalById(fy.ref).start : "9999";
+      return dx.localeCompare(dy);
+    });
+    worldList.innerHTML = order
+      .map((p) => {
+        const fest = p.items.find((it) => it.kind === "festival");
+        const r = fest ? rank(fest.ref) : null;
+        return `<li class="wcity" data-place="${p.id}"><p class="wcity__head">${t.cities[p.city]}${r ? `<span class="gcard__badge${r === "then" ? " gcard__badge--then" : ""}">${t.world[r]}</span>` : ""}</p><ul class="wcity__items">${p.items.map((it) => itemHTML(it, t, rank)).join("")}</ul></li>`;
+      })
+      .join("");
+  };
+  let worldView = (() => {
+    try {
+      const v = localStorage.getItem(VIEW_KEY);
+      if (v === "globe" || v === "list") return v;
+    } catch {}
+    return narrowMQ.matches ? "list" : "globe";
+  })();
+  const setWorldView = (v, persist) => {
+    worldView = v;
+    worldScene.dataset.view = v;
+    worldList.hidden = v !== "list";
+    viewBtns.forEach((b) => b.setAttribute("aria-selected", String(b.dataset.view === v)));
+    if (v === "list" && globe) globe.blur();
+    if (globe) v === "globe" ? globe.start() : globe.stop();
+    if (persist) {
+      try {
+        localStorage.setItem(VIEW_KEY, v);
+      } catch {}
+    }
+    window.ScrollTrigger && ScrollTrigger.refresh();
+  };
+  viewBtns.forEach((b) => b.addEventListener("click", () => setWorldView(b.dataset.view, true)));
 
   const initGlobe = () => {
     const canvas = $("#globe");
@@ -511,13 +569,16 @@
     const paths = $("#paths");
     paths.innerHTML = PATHS.map((p) => `<a href="${p.url}" target="_blank" rel="noopener noreferrer">${p.name}</a>`).join("");
     // run only while the world is on screen
-    const io = new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? globe.start() : globe.stop())), { threshold: 0.05 });
+    const io = new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting && worldView === "globe" ? globe.start() : globe.stop())), { threshold: 0.05 });
     io.observe($("#s-globe"));
+    buildWorldList();
+    setWorldView(worldView, false);
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && globe.isFocused()) globe.blur();
     });
   };
   const localizeGlobe = () => {
+    if (worldList) buildWorldList();
     if (!globe) return;
     const map = {};
     PLACES.forEach((p) => (map[p.id] = I18N[lang].cities[p.city]));
@@ -825,13 +886,18 @@
     };
 
     // 7 · the world — the head arrives, the globe rises, the field recedes.
+    // On narrow screens the scene is not pinned: the list scrolls in flow.
     const globeScene = () => {
+      if (narrowMQ.matches) {
+        ScrollTrigger.create({ trigger: "#s-globe", start: "top 80%", end: "bottom 20%", onEnter: () => universe.stop(), onLeave: () => universe.start(), onEnterBack: () => universe.stop(), onLeaveBack: () => universe.start() });
+        return;
+      }
       gsap
-        .timeline({ scrollTrigger: pin("#s-globe", coarse ? "+=110%" : "+=150%") })
+        .timeline({ scrollTrigger: pin("#s-globe", "+=150%", { onEnter: () => universe.stop(), onLeave: () => universe.start(), onEnterBack: () => universe.stop(), onLeaveBack: () => universe.start() }) })
         .fromTo("#s-globe .big--map", coarse ? { opacity: 0, scale: 1.5 } : { opacity: 0, scale: 1.9, filter: "blur(14px)" }, coarse ? { opacity: 1, scale: 1, duration: 0.18, ease: "power3.out" } : { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.18, ease: "power3.out" }, 0)
         .fromTo("#s-globe .globe__head .sub", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.14 }, 0.08)
         .fromTo("#globe-stage", { opacity: 0, scale: 0.86, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0.1)
-        .to(U, { dim: 0.3, swirl: 0.35, duration: 0.3 }, 0)
+        .to(U, { dim: 0, swirl: 0.35, duration: 0.25 }, 0)
         .to({}, { duration: 0.5 }) // the hold — spin it, tap a light, open a card
         .to(U, { dim: 1, swirl: 0, duration: 0.1 }, 0.9);
     };

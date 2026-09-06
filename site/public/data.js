@@ -411,6 +411,7 @@ window.SM = (() => {
   const FESTIVALS = [
     {
       id: "punta",
+      image: "/img/places/punta.webp",
       name: "Punta Cana Bachata Beach Paradise 2026",
       city: "punta",
       start: "2026-10-29",
@@ -424,6 +425,7 @@ window.SM = (() => {
     },
     {
       id: "orlando",
+      image: "/img/places/orlando.webp",
       name: "Sensual Movement 11th Anniversary",
       city: "orlando",
       start: "2027-02-11",
@@ -437,6 +439,7 @@ window.SM = (() => {
     },
     {
       id: "paris",
+      image: "/img/places/paris.webp",
       name: "Sensual Movement Paris France 2027",
       city: "paris",
       start: "2027-04-22",
@@ -450,6 +453,7 @@ window.SM = (() => {
     },
     {
       id: "miami",
+      image: "/img/places/miami.webp",
       name: "Miami Bachata Paradise 2027",
       city: "miami",
       start: "2027-06-17",
@@ -463,6 +467,7 @@ window.SM = (() => {
     },
     {
       id: "nyc",
+      image: "/img/places/nyc.webp",
       name: "Empire Sensual Movement 2027",
       city: "nyc",
       start: "2027-07-29",
@@ -490,23 +495,23 @@ window.SM = (() => {
         {
           kind: "social", name: "Friday Bachata Sensual Nights",
           when: { en: "Fridays · dancing from 10 PM", es: "Viernes · baile desde las 10 PM", fr: "Vendredis · danse dès 22 h", pt: "Sextas · dança a partir das 22h" },
-          venue: "224 W 35th St, 15th floor", url: WEB + "/product/socials/nyc-socials/friday-bachata-sensual-nights-social-party/",
+          venue: "224 W 35th St, 15th floor", image: "/img/places/nyc-fridays.webp", url: WEB + "/product/socials/nyc-socials/friday-bachata-sensual-nights-social-party/",
         },
         {
           kind: "social", name: "Roofchata Wednesdays at 230 Fifth",
           when: { en: "Every Wednesday · class 9 PM · dancing 10 PM – 1 AM", es: "Cada miércoles · clase 9 PM · baile 10 PM – 1 AM", fr: "Chaque mercredi · cours 21 h · danse 22 h – 1 h", pt: "Toda quarta · aula 21h · dança 22h – 1h" },
-          venue: "230 5th Ave", url: WEB + "/product/socials/nyc-socials/roofchata-wednesdays-bachata-party/",
+          venue: "230 5th Ave", image: "/img/places/nyc-roofchata.webp", url: WEB + "/product/socials/nyc-socials/roofchata-wednesdays-bachata-party/",
         },
         {
           kind: "classes", name: "Bachata classes · Levels 1 to 3",
           when: { en: "Mondays, Wednesdays and Fridays", es: "Lunes, miércoles y viernes", fr: "Lundis, mercredis et vendredis", pt: "Segundas, quartas e sextas" },
-          venue: "224 West 35th Street, 15th floor", url: WEB + "/sensual-bachata-classes-new-york-city-ny/",
+          venue: "224 West 35th Street, 15th floor", image: "/img/places/nyc-classes.webp", url: WEB + "/sensual-bachata-classes-new-york-city-ny/",
         },
         { kind: "privates", name: "Private packages", url: WEB + "/private-packages/" },
         {
           kind: "training", name: "New York Intensive Training Week",
           when: { en: "July 28–30, 2026 · Pearl Studio, 500 8th Ave", es: "28–30 de julio de 2026 · Pearl Studio, 500 8th Ave", fr: "28–30 juillet 2026 · Pearl Studio, 500 8th Ave", pt: "28–30 de julho de 2026 · Pearl Studio, 500 8th Ave" },
-          url: WEB + "/new-york-intensive-training-week/",
+          image: "/img/places/nyc-training.webp", url: WEB + "/new-york-intensive-training-week/",
         },
       ],
     },
@@ -520,7 +525,7 @@ window.SM = (() => {
       id: "orlando", city: "orlando", lat: 28.5383, lon: -81.3792,
       items: [
         { kind: "festival", ref: "orlando" },
-        { kind: "program", name: "Artist Development Program", when: { en: "Orlando · by application", es: "Orlando · por solicitud", fr: "Orlando · sur candidature", pt: "Orlando · por inscrição" }, url: WEB + "/sensual-movement-usa-artist-development-program/" },
+        { kind: "program", name: "Artist Development Program", when: { en: "Orlando · by application", es: "Orlando · por solicitud", fr: "Orlando · sur candidature", pt: "Orlando · por inscrição" }, image: "/img/places/orlando-adp.webp", url: WEB + "/sensual-movement-usa-artist-development-program/" },
       ],
     },
     { id: "punta", city: "punta", lat: 18.582, lon: -68.4055, items: [{ kind: "festival", ref: "punta" }] },
@@ -528,22 +533,22 @@ window.SM = (() => {
     {
       id: "chicago", city: "chicago", lat: 41.8781, lon: -87.6298,
       items: [
-        { kind: "classes", name: "Sensual Movement Chicago", when: { en: "Classes, pre-social classes and socials", es: "Clases, clases pre-social y sociales", fr: "Cours, cours avant-soirée et soirées", pt: "Aulas, aulas pré-social e sociais" }, url: WEB + "/sensual-movement-chicago/" },
+        { kind: "classes", name: "Sensual Movement Chicago", when: { en: "Classes, pre-social classes and socials", es: "Clases, clases pre-social y sociales", fr: "Cours, cours avant-soirée et soirées", pt: "Aulas, aulas pré-social e sociais" }, image: "/img/places/chicago.webp", url: WEB + "/sensual-movement-chicago/" },
       ],
     },
     {
       id: "sf", city: "sf", lat: 37.7749, lon: -122.4194,
       items: [
-        { kind: "classes", name: "Bachata classes · Monday + Wednesday", when: { en: "Mondays and Wednesdays", es: "Lunes y miércoles", fr: "Lundis et mercredis", pt: "Segundas e quartas" }, url: WEB + "/product/socials/san-francisco-socials/bachata-classes-monday-wednesday-san-francisco/" },
-        { kind: "social", name: "Sensual Movement San Francisco", when: { en: "Classes, socials and weekenders", es: "Clases, sociales y weekenders", fr: "Cours, soirées et week-ends", pt: "Aulas, sociais e weekenders" }, url: WEB + "/sensual-movement-san-francisco-bachata-sensual-classes-socials/" },
+        { kind: "classes", name: "Bachata classes · Monday + Wednesday", when: { en: "Mondays and Wednesdays", es: "Lunes y miércoles", fr: "Lundis et mercredis", pt: "Segundas e quartas" }, image: "/img/places/sf-classes.webp", url: WEB + "/product/socials/san-francisco-socials/bachata-classes-monday-wednesday-san-francisco/" },
+        { kind: "social", name: "Sensual Movement San Francisco", when: { en: "Classes, socials and weekenders", es: "Clases, sociales y weekenders", fr: "Cours, soirées et week-ends", pt: "Aulas, sociais e weekenders" }, image: "/img/places/sf.webp", url: WEB + "/sensual-movement-san-francisco-bachata-sensual-classes-socials/" },
       ],
     },
   ];
   /* Paths in, for people who want to become one of them. */
   const PATHS = [
-    { id: "bachastar", name: "The Next BachaStar", url: WEB + "/the-next-bachastar/" },
-    { id: "adp", name: "Artist Development Program", url: WEB + "/sensual-movement-usa-artist-development-program/" },
-    { id: "artists", name: "Our Artists", url: WEB + "/sensual-bachata-instructors/" },
+    { id: "bachastar", image: "/img/places/bachastar.webp", name: "The Next BachaStar", url: WEB + "/the-next-bachastar/" },
+    { id: "adp", image: "/img/places/orlando-adp.webp", name: "Artist Development Program", image: "/img/places/orlando-adp.webp", url: WEB + "/sensual-movement-usa-artist-development-program/" },
+    { id: "artists", image: "/img/places/artists.webp", name: "Our Artists", url: WEB + "/sensual-bachata-instructors/" },
   ];
   const ACCOUNT = { login: WEB + "/my-account/", logout: WEB + "/my-account/customer-logout/", site: WEB + "/" };
 
@@ -567,7 +572,7 @@ window.SM = (() => {
       endBig: "See you on the floor.",
       endKicker: "End",
       world: {
-        kicker: "The world", title: "One family. Seven cities.", sub: "Every festival, social and class they have announced, on one globe.",
+        viewGlobe: "Globe", viewList: "List", listHint: "Every city, everything in it.", kicker: "The world", title: "One family. Seven cities.", sub: "Every festival, social and class they have announced, on one globe.",
         hint: "Drag to spin · tap a light", legend: { festival: "Festival", social: "Weekly social", classes: "Classes & training" },
         next: "Next", then: "Then", close: "Close", become: "Become one of them",
         kinds: { festival: "Festival", social: "Social", classes: "Classes", privates: "Private lessons", training: "Training", program: "Program" },
@@ -593,7 +598,7 @@ window.SM = (() => {
       endBig: "Nos vemos en la pista.",
       endKicker: "Final",
       world: {
-        kicker: "El mundo", title: "Una familia. Siete ciudades.", sub: "Cada festival, social y clase que han anunciado, en un solo globo.",
+        viewGlobe: "Globo", viewList: "Lista", listHint: "Cada ciudad, todo lo que hay en ella.", kicker: "El mundo", title: "Una familia. Siete ciudades.", sub: "Cada festival, social y clase que han anunciado, en un solo globo.",
         hint: "Arrastra para girar · toca una luz", legend: { festival: "Festival", social: "Social semanal", classes: "Clases y formación" },
         next: "Próximo", then: "Después", close: "Cerrar", become: "Conviértete en uno de ellos",
         kinds: { festival: "Festival", social: "Social", classes: "Clases", privates: "Clases privadas", training: "Formación", program: "Programa" },
@@ -619,7 +624,7 @@ window.SM = (() => {
       endBig: "On se voit sur la piste.",
       endKicker: "Fin",
       world: {
-        kicker: "Le monde", title: "Une famille. Sept villes.", sub: "Chaque festival, soirée et cours annoncés, sur un seul globe.",
+        viewGlobe: "Globe", viewList: "Liste", listHint: "Chaque ville, tout ce qui s'y passe.", kicker: "Le monde", title: "Une famille. Sept villes.", sub: "Chaque festival, soirée et cours annoncés, sur un seul globe.",
         hint: "Glissez pour tourner · touchez une lumière", legend: { festival: "Festival", social: "Soirée hebdo", classes: "Cours et formation" },
         next: "Prochain", then: "Ensuite", close: "Fermer", become: "Devenez l'un d'eux",
         kinds: { festival: "Festival", social: "Soirée", classes: "Cours", privates: "Cours privés", training: "Formation", program: "Programme" },
@@ -645,7 +650,7 @@ window.SM = (() => {
       endBig: "A gente se vê na pista.",
       endKicker: "Fim",
       world: {
-        kicker: "O mundo", title: "Uma família. Sete cidades.", sub: "Cada festival, social e aula que anunciaram, em um só globo.",
+        viewGlobe: "Globo", viewList: "Lista", listHint: "Cada cidade, tudo o que há nela.", kicker: "O mundo", title: "Uma família. Sete cidades.", sub: "Cada festival, social e aula que anunciaram, em um só globo.",
         hint: "Arraste para girar · toque numa luz", legend: { festival: "Festival", social: "Social semanal", classes: "Aulas e formação" },
         next: "Próximo", then: "Depois", close: "Fechar", become: "Torne-se um deles",
         kinds: { festival: "Festival", social: "Social", classes: "Aulas", privates: "Aulas particulares", training: "Formação", program: "Programa" },
