@@ -75,3 +75,5 @@ Omar Gate runs on every push and pull request (`.github/workflows/omar-gate.yml`
 CSP, HSTS and the rest are set in `site/public/_headers`. The inline countdown
 is allowed by its SHA-256 hash; regenerate it (command in `_headers`) if that
 script changes.
+
+<!-- gate check: 2026-09-06T04:23Z -->
