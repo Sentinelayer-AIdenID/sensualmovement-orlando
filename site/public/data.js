@@ -401,7 +401,167 @@ window.SM = (() => {
     },
   };
 
-  const LANGS = ["en", "es", "fr", "pt"];
+  
+  /* ---------------------------------------------------------------- */
+  /* The family — every festival on their site, in date order.         */
+  /* Names and venues exactly as published. Positions are the map.     */
+  /* Sources, verified 2026-09-05: each festival's page on              */
+  /* sensualmovementusa.com and the "Buy Tickets Here" link on it.      */
+  /* ---------------------------------------------------------------- */
+  const FESTIVALS = [
+    {
+      id: "punta",
+      name: "Punta Cana Bachata Beach Paradise 2026",
+      city: "punta",
+      start: "2026-10-29",
+      end: "2026-11-02",
+      venue: "Meliá Caribe Beach Resort",
+      page: "https://sensualmovementusa.com/punta-cana-bachata-beach-paradise-2026/",
+      tickets: "https://www.tickettailor.com/events/smeeventsinternational/2118354",
+      hotel: null,
+      pos: { x: 0.72, y: 0.82 }, side: "br",
+      mpos: { x: 0.14, y: 0.34 },
+    },
+    {
+      id: "orlando",
+      name: "Sensual Movement 11th Anniversary",
+      city: "orlando",
+      start: "2027-02-11",
+      end: "2027-02-15",
+      venue: "Hyatt Regency Orlando",
+      page: FACTS.eventPage,
+      tickets: FACTS.checkout,
+      hotel: FACTS.venue.roomBlock,
+      next: true,
+      pos: { x: 0.34, y: 0.5 }, side: "br",
+      mpos: { x: 0.14, y: 0.47 },
+    },
+    {
+      id: "paris",
+      name: "Sensual Movement Paris France 2027",
+      city: "paris",
+      start: "2027-04-22",
+      end: "2027-04-26",
+      venue: "H4 Wyndham Paris Pleyel",
+      page: "https://sensualmovementusa.com/sensual-movement-paris-france-2027/",
+      tickets: "https://buytickets.at/smdancelife/2185407",
+      hotel: null,
+      pos: { x: 0.86, y: 0.36 }, side: "bl",
+      mpos: { x: 0.14, y: 0.6 },
+    },
+    {
+      id: "miami",
+      name: "Miami Bachata Paradise 2027",
+      city: "miami",
+      start: "2027-06-17",
+      end: "2027-06-21",
+      venue: "Hyatt Regency, 400 SE 2nd St",
+      page: "https://sensualmovementusa.com/miami-bachata-paradise-2027/",
+      tickets: "https://buytickets.at/smdancesyndicateinc/2242926",
+      hotel: "https://www.hyatt.com/en-US/group-booking/MIARM/G-7505",
+      pos: { x: 0.58, y: 0.6 }, side: "br",
+      mpos: { x: 0.14, y: 0.73 },
+    },
+    {
+      id: "nyc",
+      name: "Empire Sensual Movement 2027",
+      city: "nyc",
+      start: "2027-07-29",
+      end: "2027-08-02",
+      venue: "New York Marriott Marquis",
+      page: "https://sensualmovementusa.com/empire-sensual-movement-nyc-2027/",
+      tickets: "https://buytickets.at/smeevents/2340162",
+      hotel: null,
+      pos: { x: 0.6, y: 0.3 }, side: "bl",
+      mpos: { x: 0.14, y: 0.86 },
+    },
+  ];
+
+  /* Strings the trailer cut added. Merged into I18N per language below. */
+  const MORE = {
+    en: {
+      open: "Start",
+      hud: { tickets: "Tickets", until: "to Orlando" },
+      words1: ["Eleven years.", "One floor.", "February 11–15."],
+      words2: ["Workshops all day.", "Socials until 9 AM.", "US Bachata Championships."],
+      map: {
+        kicker: "The family",
+        title: "One family. Five cities.",
+        sub: "Every festival Sensual Movement has announced, in order.",
+        next: "Next up",
+        tickets: "Tickets",
+        hotel: "Hotel",
+        page: "Details",
+      },
+      cities: { punta: "Punta Cana", orlando: "Orlando", paris: "Paris", miami: "Miami", nyc: "New York" },
+      endBig: "See you on the floor.",
+      endKicker: "End",
+      room: { play: "Play", pause: "Pause", unmute: "Unmute", mute: "Mute", prev: "Previous room", next: "Next room", here: "You are here" },
+    },
+    es: {
+      open: "Inicio",
+      hud: { tickets: "Entradas", until: "para Orlando" },
+      words1: ["Once años.", "Una pista.", "11–15 de febrero."],
+      words2: ["Talleres todo el día.", "Sociales hasta las 9 AM.", "US Bachata Championships."],
+      map: {
+        kicker: "La familia",
+        title: "Una familia. Cinco ciudades.",
+        sub: "Todos los festivales que Sensual Movement ha anunciado, en orden.",
+        next: "El próximo",
+        tickets: "Entradas",
+        hotel: "Hotel",
+        page: "Detalles",
+      },
+      cities: { punta: "Punta Cana", orlando: "Orlando", paris: "París", miami: "Miami", nyc: "Nueva York" },
+      endBig: "Nos vemos en la pista.",
+      endKicker: "Final",
+      room: { play: "Reproducir", pause: "Pausa", unmute: "Activar sonido", mute: "Silenciar", prev: "Sala anterior", next: "Siguiente sala", here: "Estás aquí" },
+    },
+    fr: {
+      open: "Début",
+      hud: { tickets: "Billets", until: "avant Orlando" },
+      words1: ["Onze ans.", "Une piste.", "11–15 février."],
+      words2: ["Ateliers toute la journée.", "Soirées jusqu'à 9 h.", "US Bachata Championships."],
+      map: {
+        kicker: "La famille",
+        title: "Une famille. Cinq villes.",
+        sub: "Tous les festivals annoncés par Sensual Movement, dans l'ordre.",
+        next: "Prochain",
+        tickets: "Billets",
+        hotel: "Hôtel",
+        page: "Détails",
+      },
+      cities: { punta: "Punta Cana", orlando: "Orlando", paris: "Paris", miami: "Miami", nyc: "New York" },
+      endBig: "On se voit sur la piste.",
+      endKicker: "Fin",
+      room: { play: "Lecture", pause: "Pause", unmute: "Activer le son", mute: "Couper le son", prev: "Salle précédente", next: "Salle suivante", here: "Vous êtes ici" },
+    },
+    pt: {
+      open: "Início",
+      hud: { tickets: "Ingressos", until: "para Orlando" },
+      words1: ["Onze anos.", "Uma pista.", "11–15 de fevereiro."],
+      words2: ["Workshops o dia todo.", "Sociais até as 9 da manhã.", "US Bachata Championships."],
+      map: {
+        kicker: "A família",
+        title: "Uma família. Cinco cidades.",
+        sub: "Todos os festivais que a Sensual Movement anunciou, em ordem.",
+        next: "Próximo",
+        tickets: "Ingressos",
+        hotel: "Hotel",
+        page: "Detalhes",
+      },
+      cities: { punta: "Punta Cana", orlando: "Orlando", paris: "Paris", miami: "Miami", nyc: "Nova York" },
+      endBig: "A gente se vê na pista.",
+      endKicker: "Fim",
+      room: { play: "Reproduzir", pause: "Pausar", unmute: "Ativar som", mute: "Silenciar", prev: "Sala anterior", next: "Próxima sala", here: "Você está aqui" },
+    },
+  };
+  for (const l of Object.keys(MORE)) {
+    Object.assign(I18N[l], MORE[l]);
+    I18N[l].end.kicker = MORE[l].endKicker;
+  }
+
+const LANGS = ["en", "es", "fr", "pt"];
 
   /* Chat CTAs resolve to real URLs; nothing here is a dead button. */
   const CTA_URL = {
@@ -412,5 +572,5 @@ window.SM = (() => {
     teach: FACTS.eventPage,
   };
 
-  return { FACTS, ARTISTS, ARTIST_SOURCE, artists, PASSES, I18N, LANGS, CTA_URL };
+  return { FACTS, ARTISTS, ARTIST_SOURCE, artists, PASSES, FESTIVALS, I18N, LANGS, CTA_URL };
 })();

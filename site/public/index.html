@@ -64,162 +64,173 @@
       }
     </script>
   </head>
+<body>
+    <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
 
-  <body>
-    <a href="#main" class="sr-only" data-i18n="skip">Skip to content</a>
+    <!-- The universe: a depth field of light that flies forward with the scroll,
+         drifts with the hand, spirals in the dance scene and gathers into the
+         five-city map. Canvas, no library, ~2 000 points on desktop. -->
+    <canvas id="universe" aria-hidden="true"></canvas>
+    <div class="spot" aria-hidden="true"></div>
     <div class="grain" aria-hidden="true"></div>
-    <div class="thread" id="thread" aria-hidden="true"></div>
 
-    <!-- language toggle, corner — every visible string translates, no auto-detect -->
-    <div class="lang lang--corner" role="group" aria-label="Language" data-lang-group></div>
+    <!-- Always there once you have started scrolling; every part of it is a link. -->
+    <header class="hud" id="hud">
+      <a class="hud__mark" href="https://sensualmovementusa.com/" target="_blank" rel="noopener noreferrer">Sensual Movement</a>
+      <a class="hud__cd tnum" id="hud-cd" href="https://www.tickettailor.com/events/smdancecompany/2068265" target="_blank" rel="noopener noreferrer">
+        <span id="hud-cd-text">—</span>
+        <span class="hud__cd-sub" data-i18n="hud.until">to Orlando</span>
+      </a>
+      <div class="hud__right">
+        <div class="lang" data-lang-group></div>
+        <a class="btn btn--red" href="https://www.tickettailor.com/events/smdancecompany/2068265" target="_blank" rel="noopener noreferrer" data-i18n="hud.tickets">Tickets</a>
+      </div>
+    </header>
+    <nav class="dots" id="dots" aria-label="Scenes"></nav>
+    <!-- The corridor: previous room / where you are / next room. Arrow keys too. -->
+    <nav class="walk" id="walk" aria-label="Rooms">
+      <button type="button" id="walk-prev" class="walk__btn"><span aria-hidden="true">&larr;</span></button>
+      <span class="walk__label" id="walk-label" aria-live="polite"></span>
+      <button type="button" id="walk-next" class="walk__btn"><span aria-hidden="true">&rarr;</span></button>
+    </nav>
 
     <main id="main">
-      <!-- 0 · Load: black, the countdown -->
-      <section class="beat beat--load" id="beat-load" aria-labelledby="cd-title">
-        <div class="countdown">
-          <h1 id="cd-title" class="sr-only">Sensual Movement 11th Anniversary — Orlando, February 11–15, 2027</h1>
+      <!-- 0 · open -->
+      <section class="scene scene--open" id="s-open" data-dot="open">
+        <div class="open__inner">
+          <p class="kicker">Sensual Movement · 11th Anniversary</p>
+          <h1 class="line" data-i18n="countdownLine">Orlando. Eleven years.</h1>
           <div class="digits tnum" id="digits" role="timer" aria-live="off" data-kickoff="2027-02-12T02:30:00Z">
-            <div class="unit"><span class="n" data-cd="d">—</span><span class="u" data-i18n="cd.days">days</span></div>
-            <span class="sep" aria-hidden="true">:</span>
-            <div class="unit"><span class="n" data-cd="h">—</span><span class="u" data-i18n="cd.hours">hours</span></div>
-            <span class="sep" aria-hidden="true">:</span>
-            <div class="unit"><span class="n" data-cd="m">—</span><span class="u" data-i18n="cd.minutes">minutes</span></div>
-            <span class="sep" aria-hidden="true">:</span>
-            <div class="unit"><span class="n" data-cd="s">—</span><span class="u" data-i18n="cd.seconds">seconds</span></div>
+            <span class="unit"><span class="n" data-cd="d">—</span><span class="u" data-i18n="cd.days">days</span></span>
+            <span class="unit"><span class="n" data-cd="h">—</span><span class="u" data-i18n="cd.hours">hours</span></span>
+            <span class="unit"><span class="n" data-cd="m">—</span><span class="u" data-i18n="cd.minutes">minutes</span></span>
+            <span class="unit"><span class="n" data-cd="s">—</span><span class="u" data-i18n="cd.seconds">seconds</span></span>
           </div>
-          <p class="line" data-i18n="countdownLine">Orlando. Eleven years.</p>
           <p class="until" data-i18n="cdUntil">until the doors open</p>
+          <p class="cue"><span data-i18n="scrollCue">Scroll</span><i></i></p>
         </div>
-        <div class="cue" aria-hidden="true"><span data-i18n="scrollCue">Scroll</span><i></i></div>
       </section>
-            <!--
-        Inlined on purpose: this is the page's largest paint and an external
-        script is one more round trip after the HTML. It is allowed by the CSP
-        through its SHA-256 hash (see _headers), not by 'unsafe-inline'.
-      -->
-      <script>/*
-  Countdown — deliberately its own tiny synchronous script placed right after
-  the digits in the document, so the page's largest paint does not wait on the
-  deferred app bundle. The target lives on #digits as data-kickoff (the single
-  source; data.js reads it from there too).
-*/
-(function () {
-  var box = document.getElementById("digits");
-  if (!box) return;
-  var target = new Date(box.getAttribute("data-kickoff")).getTime();
-  var el = {};
-  ["d", "h", "m", "s"].forEach(function (k) {
-    el[k] = box.querySelector('[data-cd="' + k + '"]');
-  });
-  var pad = function (n) {
-    return (n < 10 ? "0" : "") + n;
-  };
-  var tick = function () {
-    var ms = Math.max(0, target - Date.now());
-    var d = Math.floor(ms / 864e5);
-    ms -= d * 864e5;
-    var h = Math.floor(ms / 36e5);
-    ms -= h * 36e5;
-    var m = Math.floor(ms / 6e4);
-    var s = Math.floor((ms - m * 6e4) / 1e3);
-    el.d.textContent = String(d);
-    el.h.textContent = pad(h);
-    el.m.textContent = pad(m);
-    el.s.textContent = pad(s);
-  };
-  tick();
-  setInterval(tick, 1000);
-})();</script>
+      <!-- Inlined on purpose: the digits are the page's largest paint and an
+           external script is one more round trip. Allowed by the CSP through
+           its SHA-256 hash (see _headers), not by 'unsafe-inline'. -->
+      <script>(function(){var d=document.getElementById("digits");if(!d)return;var T=Date.parse(d.dataset.kickoff);var E={d:d.querySelector('[data-cd="d"]'),h:d.querySelector('[data-cd="h"]'),m:d.querySelector('[data-cd="m"]'),s:d.querySelector('[data-cd="s"]')};function p(n){return n<10?"0"+n:""+n}function tick(){var ms=Math.max(0,T-Date.now());var s=Math.floor(ms/1000);var D=Math.floor(s/86400),H=Math.floor(s%86400/3600),M=Math.floor(s%3600/60),S=s%60;E.d.textContent=D;E.h.textContent=p(H);E.m.textContent=p(M);E.s.textContent=p(S);var h=document.getElementById("hud-cd-text");if(h)h.textContent=D+"d "+p(H)+"h "+p(M)+"m";}tick();setInterval(tick,1000);})();</script>
 
-      <!-- 1 · Arrive -->
-      <section class="beat beat--film" id="beat-arrive" data-beat="arrive">
-        <div class="stage bars" data-bars>
-          <div class="film">
-            <img src="/img/arrive.webp" alt="" width="1280" height="720" loading="lazy" decoding="async" />
-            <video src="/video/arrive.mp4" muted playsinline preload="metadata" poster="/img/arrive.webp" aria-hidden="true"></video>
-            <div class="veil" aria-hidden="true"></div>
-          </div>
-          <div class="caption">
-            <p class="kicker reveal" data-i18n="arrive.kicker">Arrive</p>
-            <h2 class="line reveal" data-i18n="arrive.line">Hyatt Regency Orlando · February 11–15, 2027</h2>
-          </div>
+      <!-- 1 · words -->
+      <section class="scene scene--words" id="s-words1">
+        <div class="words">
+          <p class="big" data-i18n="words1.0">Eleven years.</p>
+          <p class="big" data-i18n="words1.1">One floor.</p>
+          <p class="big big--gold" data-i18n="words1.2">February 11–15.</p>
         </div>
       </section>
 
-      <!-- 2 · Learn -->
-      <section class="beat beat--film" id="beat-learn" data-beat="learn">
-        <div class="stage">
-          <div class="film">
-            <img src="/img/learn.webp" alt="" width="1280" height="720" loading="lazy" decoding="async" />
-            <video src="/video/learn.mp4" muted playsinline preload="metadata" poster="/img/learn.webp" aria-hidden="true"></video>
-            <div class="veil" aria-hidden="true"></div>
-          </div>
-          <div class="caption">
-            <p class="kicker reveal" data-i18n="learn.kicker">Learn</p>
-            <h2 class="line reveal" data-i18n="learn.line">Workshops all day. Every level.</h2>
-          </div>
+      <!-- 2 · arrive -->
+      <section class="scene scene--film" id="s-arrive" data-dot="arrive.kicker" data-frame="iris">
+        <div class="frame">
+          <img src="/img/arrive.webp" alt="" width="1280" height="720" loading="lazy" decoding="async" />
+          <video muted playsinline preload="metadata" poster="/img/arrive.webp" src="/video/arrive.mp4" data-audio="1"></video>
+          <div class="veil"></div>
+        </div>
+        <div class="film__copy">
+          <p class="big big--cross" data-i18n="arrive.kicker">Arrive</p>
+          <p class="sub" data-i18n="arrive.line">Hyatt Regency Orlando · February 11–15, 2027</p>
         </div>
       </section>
 
-      <!-- 3 · Dance -->
-      <section class="beat beat--film" id="beat-dance" data-beat="dance">
-        <div class="stage">
-          <div class="film">
-            <img src="/img/dance.webp" alt="" width="1280" height="720" loading="lazy" decoding="async" />
-            <video src="/video/dance.mp4" muted playsinline preload="metadata" poster="/img/dance.webp" aria-hidden="true"></video>
-            <div class="veil" aria-hidden="true"></div>
-          </div>
-          <div class="caption">
-            <p class="kicker reveal" data-i18n="dance.kicker">Dance</p>
-            <h2 class="line reveal" data-i18n="dance.line">Socials until 9 AM.</h2>
-          </div>
+      <!-- 3 · words -->
+      <section class="scene scene--words" id="s-words2">
+        <div class="words">
+          <p class="big" data-i18n="words2.0">Workshops all day.</p>
+          <p class="big big--outline" data-i18n="words2.1">Socials until 9 AM.</p>
+          <p class="big big--gold" data-i18n="words2.2">US Bachata Championships.</p>
         </div>
       </section>
 
-      <!-- 4 · Compete -->
-      <section class="beat beat--film" id="beat-compete" data-beat="compete">
-        <div class="stage">
-          <div class="film">
-            <img src="/img/compete.webp" alt="" width="1280" height="720" loading="lazy" decoding="async" />
-            <video src="/video/compete.mp4" muted playsinline preload="metadata" poster="/img/compete.webp" aria-hidden="true"></video>
-            <div class="veil" aria-hidden="true"></div>
-          </div>
-          <div class="caption">
-            <p class="kicker reveal" data-i18n="compete.kicker">Compete</p>
-            <h2 class="line reveal" data-i18n="compete.line">US Bachata Championships.</h2>
-            <p class="sub reveal" data-i18n="esencia">Esencia Takeover — for the first time, the Esencia family takes over Sensual Movement.</p>
-          </div>
+      <!-- 4 · learn -->
+      <section class="scene scene--film" id="s-learn" data-dot="learn.kicker" data-frame="bars">
+        <div class="frame">
+          <img src="/img/learn.webp" alt="" width="1280" height="720" loading="lazy" decoding="async" />
+          <video muted playsinline preload="metadata" poster="/img/learn.webp" src="/video/learn.mp4" data-audio="1"></video>
+          <div class="veil"></div>
+        </div>
+        <div class="pics" aria-hidden="true">
+          <img class="pic pic--a" src="/img/still/learn_3.4.webp" alt="" loading="lazy" decoding="async" />
+          <img class="pic pic--b" src="/img/still/arrive_1.2.webp" alt="" loading="lazy" decoding="async" />
+        </div>
+        <div class="film__copy">
+          <p class="big big--cross" data-i18n="learn.kicker">Learn</p>
+          <p class="sub" data-i18n="learn.line">Workshops all day. Every level.</p>
         </div>
       </section>
 
-      <!-- 5 · Passes: the ladder is real text -->
-      <section class="beat beat--passes" id="beat-passes" aria-labelledby="passes-title">
-        <div class="wrap">
-          <header class="section-head">
-            <p class="kicker" data-i18n="passes.kicker">Passes</p>
-            <h2 id="passes-title" class="display" data-i18n="passes.title">Choose your nights.</h2>
-          </header>
-          <ul class="ladder" id="ladder"></ul>
-          <p class="ladder-note"><span data-i18n="passes.fullNote">Thursday party not included.</span> <span data-i18n="passes.noRefunds">No refunds — their words.</span></p>
-          <p style="margin-top:28px">
-            <a class="btn" href="https://www.tickettailor.com/events/smdancecompany/2068265" target="_blank" rel="noopener noreferrer" data-i18n="passes.see">See prices</a>
-          </p>
+      <!-- 5 · dance -->
+      <section class="scene scene--film" id="s-dance" data-dot="dance.kicker" data-frame="disc">
+        <div class="frame">
+          <img src="/img/dance.webp" alt="" width="1280" height="720" loading="lazy" decoding="async" />
+          <video muted playsinline preload="metadata" poster="/img/dance.webp" src="/video/dance.mp4" data-audio="1"></video>
+          <div class="veil"></div>
+        </div>
+        <div class="film__copy film__copy--top">
+          <p class="big big--cross" data-i18n="dance.kicker">Dance</p>
+          <p class="sub" data-i18n="dance.line">Socials until 9 AM.</p>
         </div>
       </section>
 
-      <!-- 6 · Ask -->
-      <section class="beat beat--ask" id="beat-ask" aria-labelledby="ask-title">
-        <div class="wrap">
-          <header class="section-head">
-            <p class="kicker" data-i18n="chat.kicker">Ask</p>
-            <h2 id="ask-title" class="display" data-i18n="chat.title">Five things people ask first.</h2>
-            <p class="ladder-note" data-i18n="chat.sub">Scripted answers from Sensual Movement's own pages. The full assistant answers everything, in four languages, after kickoff.</p>
-          </header>
-          <div class="chat" id="chat">
-            <div class="chat-log" id="chat-log" aria-live="polite"></div>
+      <!-- 6 · compete -->
+      <section class="scene scene--film" id="s-compete" data-dot="compete.kicker" data-frame="slide">
+        <div class="frame">
+          <img src="/img/compete.webp" alt="" width="1280" height="720" loading="lazy" decoding="async" />
+          <video muted playsinline preload="metadata" poster="/img/compete.webp" src="/video/compete.mp4" data-audio="1"></video>
+          <div class="veil"></div>
+        </div>
+        <div class="pics pics--tilt" aria-hidden="true">
+          <img class="pic pic--a" src="/img/still/compete_1.2.webp" alt="" loading="lazy" decoding="async" />
+          <img class="pic pic--c" src="/img/still/dance_5.2.webp" alt="" loading="lazy" decoding="async" />
+          <img class="pic pic--b" src="/img/still/compete_5.2.webp" alt="" loading="lazy" decoding="async" />
+        </div>
+        <div class="film__copy">
+          <p class="big big--cross" data-i18n="compete.kicker">Compete</p>
+          <p class="sub" data-i18n="compete.line">US Bachata Championships.</p>
+          <p class="sub sub--small" data-i18n="esencia">Esencia Takeover</p>
+        </div>
+      </section>
+
+      <!-- 7 · the map -->
+      <section class="scene scene--map" id="s-map" data-dot="map.kicker">
+        <div class="map__head">
+          <p class="kicker" data-i18n="map.kicker">The family</p>
+          <h2 class="big big--map" data-i18n="map.title">One family. Five cities.</h2>
+          <p class="sub" data-i18n="map.sub">Every festival Sensual Movement has announced, in order.</p>
+        </div>
+        <svg class="map__thread" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path id="thread-path" d="" pathLength="1" />
+        </svg>
+        <ol class="map__nodes" id="nodes"></ol>
+      </section>
+
+      <!-- 8 · passes -->
+      <section class="scene scene--flow" id="s-passes" data-dot="passes.kicker">
+        <div class="flow__inner">
+          <p class="kicker" data-i18n="passes.kicker">Passes</p>
+          <h2 class="h2 reveal" data-i18n="passes.title">Choose your nights.</h2>
+          <p class="sub reveal" data-i18n="passes.rounds">Early Bird rounds, then door price.</p>
+          <ol class="ladder reveal" id="ladder"></ol>
+          <p class="fine reveal"><span data-i18n="passes.fullNote">Thursday party not included.</span> <span data-i18n="passes.noRefunds">No refunds — their words.</span></p>
+          <p class="reveal"><a class="btn btn--red" href="https://www.tickettailor.com/events/smdancecompany/2068265" target="_blank" rel="noopener noreferrer" data-i18n="passes.see">See prices</a></p>
+        </div>
+      </section>
+
+      <!-- 9 · ask -->
+      <section class="scene scene--flow" id="s-ask" data-dot="chat.kicker">
+        <div class="flow__inner">
+          <p class="kicker" data-i18n="chat.kicker">Ask</p>
+          <h2 class="h2 reveal" data-i18n="chat.title">Five things people ask first.</h2>
+          <p class="sub reveal" data-i18n="chat.sub">Scripted answers from Sensual Movement's own pages.</p>
+          <div class="chat reveal" id="chat">
+            <div class="chat__log" id="chat-log" aria-live="polite"></div>
             <div class="chips" id="chips"></div>
-            <form class="chat-form" id="chat-form">
-              <label for="chat-input" class="sr-only" data-i18n="chat.placeholder">Ask something…</label>
+            <form class="chat__form" id="chat-form">
+              <label class="sr-only" for="chat-input" data-i18n="chat.placeholder">Ask something…</label>
               <input id="chat-input" type="text" autocomplete="off" data-i18n-placeholder="chat.placeholder" placeholder="Ask something…" />
               <button type="submit" data-i18n="chat.send">Send</button>
             </form>
@@ -227,36 +238,30 @@
         </div>
       </section>
 
-      <!-- 7 · End -->
-      <section class="beat beat--end" id="beat-end">
-        <div class="wrap">
-          <h2 class="display line reveal" data-i18n="end.line">See you in Orlando.</h2>
-          <div class="ctas reveal">
-            <a class="btn" href="https://www.tickettailor.com/events/smdancecompany/2068265" target="_blank" rel="noopener noreferrer" data-i18n="end.cta">See prices</a>
-            <a class="btn btn--ghost" href="https://www.hyatt.com/events/en-US/group-booking/MCORO/G-SMD1" target="_blank" rel="noopener noreferrer" data-i18n="end.hotel">Book your room</a>
-          </div>
-          <div class="lang" role="group" aria-label="Language" data-lang-group></div>
+      <!-- 10 · end -->
+      <section class="scene scene--end" id="s-end" data-dot="end.kicker">
+        <div class="end__inner">
+          <p class="big big--end reveal" data-i18n="endBig">See you on the floor.</p>
+          <p class="sub reveal" data-i18n="end.line">See you in Orlando.</p>
+          <p class="end__ctas reveal">
+            <a class="btn btn--red" href="https://www.tickettailor.com/events/smdancecompany/2068265" target="_blank" rel="noopener noreferrer" data-i18n="end.cta">See prices</a>
+            <a class="btn" href="https://www.hyatt.com/events/en-US/group-booking/MCORO/G-SMD1" target="_blank" rel="noopener noreferrer" data-i18n="end.hotel">Book your room</a>
+          </p>
+          <ul class="handles reveal">
+            <li><a href="https://www.instagram.com/sensual_movement/" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+            <li><a href="https://www.tiktok.com/@sensual_movement" target="_blank" rel="noopener noreferrer">TikTok</a></li>
+            <li><a href="https://www.youtube.com/@sensualmovement" target="_blank" rel="noopener noreferrer">YouTube</a></li>
+            <li><a href="https://www.facebook.com/newyorkbachata" target="_blank" rel="noopener noreferrer">Facebook</a></li>
+          </ul>
+          <div class="lang lang--end reveal" data-lang-group></div>
+          <footer class="foot reveal">
+            <a href="https://sensualmovementusa.com/sensual-movement-11th-anniversary/" target="_blank" rel="noopener noreferrer" data-i18n="footer.event">Official event page</a>
+            <span data-i18n="footer.built">Front door by PlexAura</span>
+          </footer>
         </div>
-        <footer class="footer">
-          <span data-i18n="footer.follow">Follow</span>
-          <nav class="handles" aria-label="Social">
-            <a href="https://www.instagram.com/sensual_movement/" target="_blank" rel="noopener noreferrer">Instagram @sensual_movement</a>
-            <a href="https://www.tiktok.com/@sensual_movement" target="_blank" rel="noopener noreferrer">TikTok @sensual_movement</a>
-            <a href="https://www.youtube.com/@sensualmovement" target="_blank" rel="noopener noreferrer">YouTube @sensualmovement</a>
-            <a href="https://www.facebook.com/newyorkbachata" target="_blank" rel="noopener noreferrer">Facebook</a>
-          </nav>
-          <a href="https://sensualmovementusa.com/sensual-movement-11th-anniversary/" target="_blank" rel="noopener noreferrer" data-i18n="footer.event">Official event page</a>
-          <span data-i18n="footer.built">Front door by PlexAura</span>
-        </footer>
       </section>
     </main>
 
-    <!--
-      Only first-party scripts sit in the document. The countdown is the LCP
-      element and it is JS-rendered, so it must not queue behind a cross-origin
-      library. app.js paints the digits immediately, then fetches GSAP itself
-      and wires the scroll once it lands.
-    -->
     <script src="/data.js" defer></script>
     <script src="/app.js" defer></script>
   </body>
