@@ -636,8 +636,16 @@ main { position: relative; z-index: 3; }
 .node__links a:hover { color: var(--gold); }
 .node__pic { display: block; width: 7.2rem; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 4px; margin: .6rem 0 0; box-shadow: 0 16px 40px rgba(0, 0, 0, .6); }
 @media (max-width: 760px) {
-  .map__head { top: 4.2rem; }
-  .node--r .node__card { max-width: calc(100vw - 4.5rem); padding: .6rem .8rem .65rem; }
+  /* The map is a list here: it scrolls in flow, so no phone height can make
+     the cards collide, and the dots sit on a rail. */
+  .scene--map { min-height: auto; overflow: visible; padding: 5.5rem 1rem 3rem; display: block; }
+  .map__head { position: static; margin: 0 0 1.4rem; pointer-events: auto; }
+  .map__thread { display: none; }
+  .map__nodes { position: static; display: grid; gap: .55rem; margin-left: 1.1rem; padding-left: 1.3rem; border-left: 1px solid rgba(184, 137, 43, .55); }
+  .node { position: relative; left: auto; top: auto; transform: none; }
+  .node__dot { position: absolute; left: calc(-1.3rem - 6px); top: 1.05rem; width: 11px; height: 11px; }
+  .node--next .node__dot { left: calc(-1.3rem - 8px); top: .95rem; width: 15px; height: 15px; }
+  .node--r .node__card, .node--br .node__card, .node--bl .node__card { position: static; transform: none; width: auto; max-width: none; padding: .6rem .8rem .65rem; }
   .node__pic { display: none; }
   .node__name { font-size: .95rem; }
 }
@@ -766,4 +774,19 @@ html.static .walk { opacity: 1; transform: translateX(-50%); pointer-events: aut
   .digits { gap: .55rem; }
   .digits .n { font-size: clamp(2.5rem, 10.5vw, 4rem); min-width: 1.05em; }
   .digits .u { font-size: .56rem; letter-spacing: .2em; }
+}
+
+/* ---- touch devices: the same walk, without the layers a phone GPU chokes on.
+   Measured in WebKit (iPhone 13 profile): ~166 ms/frame and a 5 s stall with
+   these on; desktop keeps every one of them. ---------------------------- */
+@media (pointer: coarse) {
+  .grain, .spot { display: none; }                       /* fixed layers repainted every scroll frame */
+  .big { text-shadow: none; will-change: transform, opacity; }
+  .sub { text-shadow: 0 1px 6px rgba(0, 0, 0, .7); }
+  .digits .n { text-shadow: none; }
+  .frame .veil { background: radial-gradient(70vmax 70vmax at 50% 45%, transparent 0%, rgba(18, 10, 16, .45) 70%); }
+  .map__thread path { filter: none; }
+  .node--next .node__dot { animation: none; }
+  .pic { box-shadow: 0 12px 30px rgba(0, 0, 0, .6); }
+  .node__card { box-shadow: none; }
 }

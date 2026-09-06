@@ -79,7 +79,7 @@
   /* The universe — a depth field that flies with the scroll           */
   /* ================================================================ */
   // Scene-driven state. GSAP tweens these numbers; the painter reads them.
-  const U = { swirl: 0, gather: 0, dim: 1, red: 0, anchors: [] };
+  const U = { swirl: 0, gather: 0, dim: 1, red: 0, anchors: [], anchorEls: null };
 
   const universe = (() => {
     const c = $("#universe");
@@ -117,7 +117,7 @@
       c.style.width = W + "px";
       c.style.height = H + "px";
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      N = coarse ? 850 : 1900;
+      N = coarse ? 520 : 1900;
       if (pts.length !== N) pts = Array.from({ length: N }, () => spawn(Math.random()));
       paint(true);
     };
@@ -145,7 +145,13 @@
       const speed = still ? 0 : (0.04 + warp * 1.1) * dir * dt;
       const sw = U.swirl * dt * 0.85;
       const gather = U.gather;
-      const anchors = U.anchors;
+      let anchors = U.anchors;
+      if (gather > 0 && U.anchorEls) {
+        anchors = U.anchorEls.map((el) => {
+          const b = el.getBoundingClientRect();
+          return { x: (b.left + b.width / 2) / W, y: (b.top + b.height / 2) / H };
+        });
+      }
 
       for (const p of pts) {
         if (!still) {
@@ -177,7 +183,7 @@
         const col = COL[p.k];
         const kA = p.k === 2 ? 0.5 + U.red * 0.5 : p.k === 1 ? 0.85 : 0.7;
         ctx.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},${(al * kA * U.dim).toFixed(3)})`;
-        if (warp > 0.1) {
+        if (warp > 0.1 && !coarse) {
           const dx = sx - cx, dy = sy - cy;
           const d = Math.hypot(dx, dy) || 1;
           const len = (warp * 34 * dir) / p.z * 0.45;
@@ -435,6 +441,7 @@
     });
     threadPath.setAttribute("d", pos.map((p, i) => `${i ? "L" : "M"}${(p.x * 100).toFixed(2)} ${(p.y * 100).toFixed(2)}`).join(" "));
     U.anchors = pos;
+    U.anchorEls = narrowMQ.matches ? FESTIVALS.map((f) => $(".node__dot", nodeEls.get(f.id))) : null;
   };
 
   const localizeNodes = () => {
@@ -587,7 +594,7 @@
         else done();
       });
     };
-    ["touchstart", "pointerdown", "wheel", "keydown"].forEach((ev) => window.addEventListener(ev, unlock, { once: true, passive: true }));
+    if (!coarse) ["touchstart", "pointerdown", "wheel", "keydown"].forEach((ev) => window.addEventListener(ev, unlock, { once: true, passive: true }));
 
     // HUD + dots appear once the opening has been left behind.
     ScrollTrigger.create({
@@ -613,8 +620,12 @@
       const tl = gsap.timeline({ scrollTrigger: pin(scene, "+=" + (lines.length * 90 + 60) + "%") });
       lines.forEach((l, i) => {
         const at = i * 1;
-        tl.fromTo(l, { opacity: 0, scale: 2.6, filter: "blur(22px)", y: 40 }, { opacity: 1, scale: 1, filter: "blur(0px)", y: 0, duration: 0.55, ease: "power3.out" }, at);
-        if (i < lines.length - 1) tl.to(l, { opacity: 0, scale: 0.55, y: -160, filter: "blur(10px)", duration: 0.45, ease: "power2.in" }, at + 0.7);
+        if (coarse) {
+          tl.fromTo(l, { opacity: 0, scale: 1.8, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.55, ease: "power3.out" }, at);
+        } else {
+          tl.fromTo(l, { opacity: 0, scale: 2.6, filter: "blur(22px)", y: 40 }, { opacity: 1, scale: 1, filter: "blur(0px)", y: 0, duration: 0.55, ease: "power3.out" }, at);
+        }
+        if (i < lines.length - 1) tl.to(l, coarse ? { opacity: 0, scale: 0.6, y: -140, duration: 0.45, ease: "power2.in" } : { opacity: 0, scale: 0.55, y: -160, filter: "blur(10px)", duration: 0.45, ease: "power2.in" }, at + 0.7);
         else tl.to(l, { opacity: 0, scale: 0.8, y: -120, duration: 0.4, ease: "power2.in" }, at + 0.85);
       });
       tl.fromTo(U, { swirl: 0 }, { swirl: 0.5, duration: lines.length * 0.6, ease: "sine.inOut" }, 0).to(U, { swirl: 0, duration: 0.5 }, ">");
@@ -652,6 +663,24 @@
             video.style.opacity = 1;
             if (video.preload !== "auto") video.preload = "auto";
           },
+          onRefresh: () => {
+            if (!coarse || video.dataset.unlocked) return;
+            // one viewport ahead of the room, muted, once
+            ScrollTrigger.create({
+              trigger: scene,
+              start: "top bottom",
+              once: true,
+              onEnter: () => {
+                if (video.dataset.unlocked) return;
+                video.dataset.unlocked = "1";
+                video.preload = "auto";
+                if (video.dataset.playing === "1") return;
+                video.dataset.unlock = "1";
+                const p = video.play();
+                if (p && p.then) p.then(() => video.pause()).catch(() => delete video.dataset.unlock);
+              },
+            });
+          },
           onEnterBack: () => (video.style.opacity = 1),
           onLeave: () => leaveRoom(scene),
           onLeaveBack: () => leaveRoom(scene),
@@ -664,7 +693,8 @@
       if (kind === "slide") tl.fromTo(frame, { xPercent: 4, scale: 1.14, opacity: 0 }, { xPercent: -4, scale: 1.02, opacity: 1, duration: 1, ease: "none" }, 0);
       tl.to(frame, { opacity: 0, duration: 0.14, ease: "power2.in" }, 0.86);
 
-      tl.fromTo(word, { xPercent: 26, opacity: 0, filter: "blur(8px)" }, { xPercent: -26, opacity: 1, filter: "blur(0px)", duration: 0.9, ease: "none" }, 0.05).to(word, { opacity: 0, duration: 0.12 }, 0.86);
+      if (coarse) tl.fromTo(word, { xPercent: 26, opacity: 0 }, { xPercent: -26, opacity: 1, duration: 0.9, ease: "none" }, 0.05).to(word, { opacity: 0, duration: 0.12 }, 0.86);
+      else tl.fromTo(word, { xPercent: 26, opacity: 0, filter: "blur(8px)" }, { xPercent: -26, opacity: 1, filter: "blur(0px)", duration: 0.9, ease: "none" }, 0.05).to(word, { opacity: 0, duration: 0.12 }, 0.86);
       tl.fromTo(subs, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.2, stagger: 0.05, ease: "power3.out" }, 0.3).to(subs, { opacity: 0, y: -20, duration: 0.12 }, 0.84);
       if (pics.length) {
         tl.fromTo(
@@ -682,9 +712,19 @@
     // 7 · the map — the family arrives, the thread draws, the light gathers.
     const mapScene = () => {
     const nodes = $$(".node");
+    if (narrowMQ.matches) {
+      gsap.fromTo("#s-map .big--map", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.9, ease: "power3.out", scrollTrigger: { trigger: "#s-map", start: "top 75%", once: true } });
+      gsap.fromTo("#s-map .map__head .sub", { opacity: 0 }, { opacity: 1, duration: 0.8, scrollTrigger: { trigger: "#s-map", start: "top 70%", once: true } });
+      gsap.fromTo(nodes, { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.7, stagger: 0.09, ease: "power3.out", scrollTrigger: { trigger: "#s-map .map__nodes", start: "top 80%", once: true } });
+      gsap.timeline({ scrollTrigger: { trigger: "#s-map", start: "top 60%", end: "bottom 40%", scrub: 0.6 } })
+        .to(U, { gather: 1, duration: 0.3, ease: "power2.inOut" }, 0)
+        .to({}, { duration: 0.4 })
+        .to(U, { gather: 0, duration: 0.3 }, 0.7);
+      return;
+    }
     gsap
       .timeline({ scrollTrigger: pin("#s-map", "+=320%") })
-      .fromTo("#s-map .big--map", { opacity: 0, scale: 2, filter: "blur(16px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.2, ease: "power3.out" }, 0)
+      .fromTo("#s-map .big--map", coarse ? { opacity: 0, scale: 1.6 } : { opacity: 0, scale: 2, filter: "blur(16px)" }, coarse ? { opacity: 1, scale: 1, duration: 0.2, ease: "power3.out" } : { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.2, ease: "power3.out" }, 0)
       .fromTo("#s-map .map__head .sub", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.15 }, 0.1)
       .to(U, { gather: 1, duration: 0.35, ease: "power2.inOut" }, 0.12)
       .fromTo(nodes, { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.14, stagger: 0.09, ease: "back.out(1.6)" }, 0.22)
