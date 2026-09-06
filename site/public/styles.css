@@ -189,15 +189,24 @@ button {
   overflow: hidden;
 }
 
-/* pinned footage beats are tall so the pin has travel to scrub through */
+/*
+  Pinned footage beats are tall so the pin has travel to scrub through.
+  They must NOT be grid containers: .beat's `place-items: center` would
+  shrink the sticky stage to zero width and park it in the middle of the
+  section — which is exactly what happened before the width below was made
+  explicit. Belt and braces: block display AND a full-width stage.
+*/
 .beat--film {
   min-height: 220svh;
   display: block;
+  place-items: initial;
 }
 
 .stage {
   position: sticky;
   top: 0;
+  display: block;
+  width: 100%;
   height: var(--beat-h);
   overflow: hidden;
 }

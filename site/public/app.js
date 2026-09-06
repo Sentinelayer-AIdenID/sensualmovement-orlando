@@ -214,6 +214,30 @@
   /* ================================================================ */
   const revealNow = () => $$(".reveal").forEach((r) => ((r.style.opacity = 1), (r.style.transform = "none")));
 
+  /*
+    GSAP is loaded here, after first paint, rather than as a <script> in the
+    document. The countdown is the page's LCP and it is JS-rendered; putting
+    two cross-origin library fetches ahead of it moved LCP from ~1.7 s to
+    3.9 s on simulated 4G. Now the digits paint first and the scroll wires
+    itself the moment the library arrives.
+  */
+  const loadGsap = () =>
+    new Promise((resolve, reject) => {
+      if (window.gsap && window.ScrollTrigger) return resolve();
+      const add = (src) =>
+        new Promise((ok, no) => {
+          const s = document.createElement("script");
+          s.src = src;
+          s.async = true;
+          s.onload = ok;
+          s.onerror = no;
+          document.head.appendChild(s);
+        });
+      add("https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js")
+        .then(() => add("https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"))
+        .then(resolve, reject);
+    });
+
   const initScroll = () => {
     if (reduce || !window.gsap || !window.ScrollTrigger) {
       // Posters and fades only. The CSS already hides the video and shows the poster.
@@ -327,5 +351,6 @@
   /* ================================================================ */
   buildLangGroups();
   applyLang();
-  initScroll();
+  if (reduce) initScroll();
+  else loadGsap().then(initScroll, revealNow);
 })();
