@@ -21,7 +21,7 @@ window.SM = (() => {
     // The checkout lists Thu Feb 11, 2027 9:30 PM as the opening. The brief said
     // 8:00 PM; the published figure wins until Carter says otherwise. Eastern
     // Standard Time in February = UTC-5.
-    kickoffISO: "2027-02-12T02:30:00Z",
+    kickoffISO: (document.getElementById("digits") || {}).dataset?.kickoff || "2027-02-12T02:30:00Z",
     kickoffLocal: "9:30 PM ET",
     dates: { start: "2027-02-11", end: "2027-02-15" },
     venue: {

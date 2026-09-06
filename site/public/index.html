@@ -78,7 +78,7 @@
       <section class="beat beat--load" id="beat-load" aria-labelledby="cd-title">
         <div class="countdown">
           <h1 id="cd-title" class="sr-only">Sensual Movement 11th Anniversary — Orlando, February 11–15, 2027</h1>
-          <div class="digits tnum" id="digits" role="timer" aria-live="off">
+          <div class="digits tnum" id="digits" role="timer" aria-live="off" data-kickoff="2027-02-12T02:30:00Z">
             <div class="unit"><span class="n" data-cd="d">—</span><span class="u" data-i18n="cd.days">days</span></div>
             <span class="sep" aria-hidden="true">:</span>
             <div class="unit"><span class="n" data-cd="h">—</span><span class="u" data-i18n="cd.hours">hours</span></div>
@@ -92,13 +92,51 @@
         </div>
         <div class="cue" aria-hidden="true"><span data-i18n="scrollCue">Scroll</span><i></i></div>
       </section>
+            <!--
+        Inlined on purpose: this is the page's largest paint and an external
+        script is one more round trip after the HTML. It is allowed by the CSP
+        through its SHA-256 hash (see _headers), not by 'unsafe-inline'.
+      -->
+      <script>/*
+  Countdown — deliberately its own tiny synchronous script placed right after
+  the digits in the document, so the page's largest paint does not wait on the
+  deferred app bundle. The target lives on #digits as data-kickoff (the single
+  source; data.js reads it from there too).
+*/
+(function () {
+  var box = document.getElementById("digits");
+  if (!box) return;
+  var target = new Date(box.getAttribute("data-kickoff")).getTime();
+  var el = {};
+  ["d", "h", "m", "s"].forEach(function (k) {
+    el[k] = box.querySelector('[data-cd="' + k + '"]');
+  });
+  var pad = function (n) {
+    return (n < 10 ? "0" : "") + n;
+  };
+  var tick = function () {
+    var ms = Math.max(0, target - Date.now());
+    var d = Math.floor(ms / 864e5);
+    ms -= d * 864e5;
+    var h = Math.floor(ms / 36e5);
+    ms -= h * 36e5;
+    var m = Math.floor(ms / 6e4);
+    var s = Math.floor((ms - m * 6e4) / 1e3);
+    el.d.textContent = String(d);
+    el.h.textContent = pad(h);
+    el.m.textContent = pad(m);
+    el.s.textContent = pad(s);
+  };
+  tick();
+  setInterval(tick, 1000);
+})();</script>
 
       <!-- 1 · Arrive -->
       <section class="beat beat--film" id="beat-arrive" data-beat="arrive">
         <div class="stage bars" data-bars>
           <div class="film">
-            <img src="/img/arrive.webp" alt="" width="1280" height="720" decoding="async" fetchpriority="high" />
-            <video src="/video/arrive.mp4" muted playsinline preload="auto" poster="/img/arrive.webp" aria-hidden="true"></video>
+            <img src="/img/arrive.webp" alt="" width="1280" height="720" loading="lazy" decoding="async" />
+            <video src="/video/arrive.mp4" muted playsinline preload="metadata" poster="/img/arrive.webp" aria-hidden="true"></video>
             <div class="veil" aria-hidden="true"></div>
           </div>
           <div class="caption">

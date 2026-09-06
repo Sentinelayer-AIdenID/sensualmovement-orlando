@@ -70,27 +70,6 @@
     });
   };
 
-  /* ================================================================ */
-  /* Countdown — to the published door time, ticking every second      */
-  /* ================================================================ */
-  const target = new Date(FACTS.kickoffISO).getTime();
-  const cd = { d: $('[data-cd="d"]'), h: $('[data-cd="h"]'), m: $('[data-cd="m"]'), s: $('[data-cd="s"]') };
-  const pad = (n) => String(n).padStart(2, "0");
-  const tick = () => {
-    let ms = Math.max(0, target - Date.now());
-    const d = Math.floor(ms / 864e5);
-    ms -= d * 864e5;
-    const h = Math.floor(ms / 36e5);
-    ms -= h * 36e5;
-    const m = Math.floor(ms / 6e4);
-    const s = Math.floor((ms - m * 6e4) / 1e3);
-    cd.d.textContent = String(d);
-    cd.h.textContent = pad(h);
-    cd.m.textContent = pad(m);
-    cd.s.textContent = pad(s);
-  };
-  tick();
-  setInterval(tick, 1000);
 
   /* ================================================================ */
   /* The pass ladder — real text, tap a rung to ask about it           */
@@ -330,7 +309,12 @@
         trigger: beat,
         start: "top bottom",
         end: "bottom top",
-        onEnter: () => (video.style.opacity = 1),
+        onEnter: () => {
+          video.style.opacity = 1;
+          // Only now is it worth buffering the whole 6 s — before this point
+          // the metadata alone was enough, and the bytes stayed off the LCP path.
+          if (video.preload !== "auto") video.preload = "auto";
+        },
         onEnterBack: () => (video.style.opacity = 1),
       });
     });
