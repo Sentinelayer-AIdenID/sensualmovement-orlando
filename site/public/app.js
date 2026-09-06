@@ -5,7 +5,7 @@
 */
 (() => {
   "use strict";
-  const { artists, PASSES, FESTIVALS, I18N, LANGS, CTA_URL } = window.SM;
+  const { artists, PASSES, FESTIVALS, PLACES, PATHS, I18N, LANGS, CTA_URL } = window.SM;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -45,7 +45,8 @@
     });
     buildLadder();
     buildChips();
-    localizeNodes();
+    localizeGlobe();
+    localizeMenu();
     localizeDots();
     localizeRooms();
     localizeWalk();
@@ -145,13 +146,7 @@
       const speed = still ? 0 : (0.04 + warp * 1.1) * dir * dt;
       const sw = U.swirl * dt * 0.85;
       const gather = U.gather;
-      let anchors = U.anchors;
-      if (gather > 0 && U.anchorEls) {
-        anchors = U.anchorEls.map((el) => {
-          const b = el.getBoundingClientRect();
-          return { x: (b.left + b.width / 2) / W, y: (b.top + b.height / 2) / H };
-        });
-      }
+      const anchors = U.anchors;
 
       for (const p of pts) {
         if (!still) {
@@ -363,7 +358,7 @@
   let walking = null;
   // Where a scene is "there": mid-room for footage (frame open, word centred),
   // partway through the words, the map once the thread is drawn.
-  const LANDING = { "s-open": 0, "s-map": 0.62 };
+  const LANDING = { "s-open": 0, "s-globe": 0.55 };
   const landingY = (s) => {
     const st = window.ScrollTrigger && ScrollTrigger.getAll().find((t) => t.pin && t.trigger === s);
     if (!st) return s.getBoundingClientRect().top + window.scrollY - (s.classList.contains("scene--flow") ? 0 : 0);
@@ -391,7 +386,7 @@
     const pos = { y: from };
     walking = gsap.to(pos, {
       y: to,
-      duration: Math.min(3, 0.9 + dist / 2600),
+      duration: coarse ? Math.min(1.4, 0.5 + dist / 4200) : Math.min(3, 0.9 + dist / 2600),
       ease: "power2.inOut",
       onUpdate: () => window.scrollTo(0, pos.y),
       onComplete: () => (walking = null),
@@ -420,13 +415,8 @@
   });
 
   /* ================================================================ */
-  /* The map — five festivals, one thread, particles gather to them    */
+  /* The world — a globe of every city they dance in                   */
   /* ================================================================ */
-  const nodesEl = $("#nodes");
-  const threadPath = $("#thread-path");
-  const nodeEls = new Map();
-  const positions = () => FESTIVALS.map((f) => (narrowMQ.matches ? f.mpos : f.pos));
-
   const fmtDates = (f) => {
     const opt = { month: "short", day: "numeric", timeZone: "UTC" };
     const a = new Date(f.start + "T00:00:00Z");
@@ -439,60 +429,149 @@
       return `${df.format(a)} – ${df.format(b)}, ${y}`;
     }
   };
-
-  const buildNodes = () => {
-    nodesEl.innerHTML = "";
-    FESTIVALS.forEach((f) => {
-      const li = document.createElement("li");
-      li.className = "node" + (f.next ? " node--next" : "");
-      li.dataset.id = f.id;
-      li.innerHTML =
-        `<span class="node__dot"></span>` +
-        `<div class="node__card">` +
-        `<p class="node__city"><span data-city></span>${f.next ? '<span class="node__next" data-next></span>' : ""}</p>` +
-        `<p class="node__name">${f.name}</p>` +
-        `<p class="node__meta"><span data-dates></span> · ${f.venue}</p>` +
-        `<ul class="node__links">` +
-        `<li><a href="${f.tickets}" target="_blank" rel="noopener noreferrer" data-l="tickets"></a></li>` +
-        (f.hotel ? `<li><a href="${f.hotel}" target="_blank" rel="noopener noreferrer" data-l="hotel"></a></li>` : "") +
-        `<li><a href="${f.page}" target="_blank" rel="noopener noreferrer" data-l="page"></a></li>` +
-        `</ul>` +
-        (f.next ? `<img class="node__pic" src="/img/poster-11th.webp" alt="" loading="lazy" decoding="async" />` : "") +
-        `</div>`;
-      nodesEl.appendChild(li);
-      nodeEls.set(f.id, li);
-    });
-    placeNodes();
-    localizeNodes();
+  // The next festival by date, and the one after it. Computed, never typed.
+  const upcoming = () => {
+    const now = Date.now();
+    return FESTIVALS.filter((f) => Date.parse(f.end + "T23:59:59Z") >= now).sort((x, y) => x.start.localeCompare(y.start));
   };
+  const festivalById = (id) => FESTIVALS.find((f) => f.id === id);
+  const placeById = (id) => PLACES.find((p) => p.id === id);
+  const gcard = $("#gcard");
+  let globe = null;
+  let openPlace = null;
 
-  const placeNodes = () => {
-    const pos = positions();
-    FESTIVALS.forEach((f, i) => {
-      const li = nodeEls.get(f.id);
-      li.style.setProperty("--x", pos[i].x);
-      li.style.setProperty("--y", pos[i].y);
-      li.classList.remove("node--br", "node--bl", "node--r");
-      li.classList.add("node--" + (narrowMQ.matches ? "r" : f.side || "br"));
-    });
-    threadPath.setAttribute("d", pos.map((p, i) => `${i ? "L" : "M"}${(p.x * 100).toFixed(2)} ${(p.y * 100).toFixed(2)}`).join(" "));
-    U.anchors = pos;
-    U.anchorEls = narrowMQ.matches ? FESTIVALS.map((f) => $(".node__dot", nodeEls.get(f.id))) : null;
-  };
-
-  const localizeNodes = () => {
+  const renderCard = (id) => {
+    const p = placeById(id);
+    if (!p) return;
     const t = I18N[lang];
-    FESTIVALS.forEach((f) => {
-      const li = nodeEls.get(f.id);
-      if (!li) return;
-      $("[data-city]", li).textContent = t.cities[f.city];
-      $("[data-dates]", li).textContent = fmtDates(f);
-      const nx = $("[data-next]", li);
-      if (nx) nx.textContent = t.map.next;
-      $$("[data-l]", li).forEach((a) => (a.textContent = t.map[a.dataset.l]));
+    const up = upcoming();
+    const rank = (fid) => (up[0] && up[0].id === fid ? "next" : up[1] && up[1].id === fid ? "then" : null);
+    const items = p.items
+      .map((it) => {
+        if (it.kind === "festival") {
+          const f = festivalById(it.ref);
+          const r = rank(f.id);
+          const badge = r ? `<span class="gcard__badge${r === "then" ? " gcard__badge--then" : ""}">${t.world[r]}</span>` : "";
+          return `<li class="gitem gitem--festival"><span class="gitem__kind">${t.world.kinds.festival} ${badge}</span><p class="gitem__name">${f.name}</p><p class="gitem__meta">${fmtDates(f)} · ${f.venue}</p><ul class="gitem__links"><li><a href="${f.tickets}" target="_blank" rel="noopener noreferrer">${t.map.tickets}</a></li>${f.hotel ? `<li><a href="${f.hotel}" target="_blank" rel="noopener noreferrer">${t.map.hotel}</a></li>` : ""}<li><a href="${f.page}" target="_blank" rel="noopener noreferrer">${t.map.page}</a></li></ul></li>`;
+        }
+        const when = it.when ? it.when[lang] || it.when.en : "";
+        const meta = [when, it.venue].filter(Boolean).join(" · ");
+        return `<li class="gitem gitem--${it.kind}"><span class="gitem__kind">${t.world.kinds[it.kind] || it.kind}</span><p class="gitem__name">${it.name}</p>${meta ? `<p class="gitem__meta">${meta}</p>` : ""}<ul class="gitem__links"><li><a href="${it.url}" target="_blank" rel="noopener noreferrer">${t.map.page}</a></li></ul></li>`;
+      })
+      .join("");
+    const fest = p.items.find((it) => it.kind === "festival");
+    const r = fest ? rank(fest.ref) : null;
+    gcard.innerHTML = `<button type="button" class="gcard__close" aria-label="${t.world.close}">&times;</button><p class="gcard__city">${t.cities[p.city]}${r ? `<span class="gcard__badge${r === "then" ? " gcard__badge--then" : ""}">${t.world[r]}</span>` : ""}</p><ul class="gcard__items">${items}</ul>`;
+    $(".gcard__close", gcard).addEventListener("click", () => globe && globe.blur());
+  };
+
+  const initGlobe = () => {
+    const canvas = $("#globe");
+    if (!canvas || !window.SMGlobe || !window.SM_LAND) return;
+    const up = upcoming();
+    const rankOf = (kind) => {
+      const f = up[kind === "next" ? 0 : 1];
+      return f ? f.city : null;
+    };
+    const places = PLACES.map((p) => {
+      const kinds = p.items.map((i) => i.kind);
+      return {
+        id: p.id,
+        lat: p.lat,
+        lon: p.lon,
+        festival: kinds.includes("festival"),
+        kind: kinds.includes("festival") ? (kinds.length > 1 ? "mixed" : "festival") : kinds.includes("social") ? "social" : "classes",
+        label: I18N[lang].cities[p.city],
+      };
+    });
+    globe = SMGlobe.create({
+      canvas,
+      land: window.SM_LAND,
+      places,
+      next: rankOf("next"),
+      then: rankOf("then"),
+      coarse,
+      reduce,
+      onFocus: (id) => {
+        openPlace = id;
+        renderCard(id);
+        gcard.hidden = false;
+        requestAnimationFrame(() => gcard.classList.add("on"));
+      },
+      onBlur: () => {
+        openPlace = null;
+        gcard.classList.remove("on");
+        setTimeout(() => {
+          if (!openPlace) gcard.hidden = true;
+        }, 450);
+      },
+    });
+    window.SM.globe = globe; // reachable for verification
+    // paths in
+    const paths = $("#paths");
+    paths.innerHTML = PATHS.map((p) => `<a href="${p.url}" target="_blank" rel="noopener noreferrer">${p.name}</a>`).join("");
+    // run only while the world is on screen
+    const io = new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? globe.start() : globe.stop())), { threshold: 0.05 });
+    io.observe($("#s-globe"));
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && globe.isFocused()) globe.blur();
     });
   };
-  narrowMQ.addEventListener?.("change", placeNodes);
+  const localizeGlobe = () => {
+    if (!globe) return;
+    const map = {};
+    PLACES.forEach((p) => (map[p.id] = I18N[lang].cities[p.city]));
+    globe.setLabels(map);
+    if (openPlace) renderCard(openPlace);
+  };
+
+  /* ================================================================ */
+  /* The menu — a quick visit, the links, the account, the language    */
+  /* ================================================================ */
+  const menu = $("#menu");
+  const menuOpen = $("#menu-open");
+  const menuScenes = $("#menu-scenes");
+  const setMenu = (on) => {
+    menu.hidden = !on;
+    menuOpen.setAttribute("aria-expanded", String(on));
+    document.documentElement.style.overflow = on ? "hidden" : "";
+    if (on) $("#menu-close").focus();
+    else menuOpen.focus();
+  };
+  const buildMenu = () => {
+    menuOpen.addEventListener("click", () => setMenu(menu.hidden));
+    $$("[data-menu-close]").forEach((el) => el.addEventListener("click", () => setMenu(false)));
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !menu.hidden) setMenu(false);
+    });
+    menuScenes.innerHTML = "";
+    scenes.forEach((s, i) => {
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.type = "button";
+      b.dataset.scene = s.id;
+      b.innerHTML = `<span class="n">${String(i + 1).padStart(2, "0")}</span><span data-label></span>`;
+      // a quick visit: straight there, no walk
+      b.addEventListener("click", () => {
+        setMenu(false);
+        stopWalk();
+        window.scrollTo({ top: Math.max(0, landingY(s)), behavior: "auto" });
+      });
+      li.appendChild(b);
+      menuScenes.appendChild(li);
+    });
+  };
+  const localizeMenu = () => {
+    const t = I18N[lang];
+    menuOpen.setAttribute("aria-label", t.menu.open);
+    menuOpen.title = t.menu.open;
+    const c = $("#menu-close");
+    if (c) c.setAttribute("aria-label", t.menu.close);
+    $$("#menu-scenes button").forEach((b) => {
+      const v = get(document.getElementById(b.dataset.scene)?.dataset.dot || "");
+      $("[data-label]", b).textContent = typeof v === "string" ? v : b.dataset.scene;
+    });
+  };
 
   /* ================================================================ */
   /* The pass ladder — real text, tap a rung to ask about it           */
@@ -635,8 +714,8 @@
     // HUD + dots appear once the opening has been left behind.
     ScrollTrigger.create({
       start: "top -35%",
-      onEnter: () => ($("#hud").classList.add("on"), dots.classList.add("on"), walk.classList.add("on")),
-      onLeaveBack: () => ($("#hud").classList.remove("on"), dots.classList.remove("on"), walk.classList.remove("on")),
+      onEnter: () => (dots.classList.add("on"), walk.classList.add("on")),
+      onLeaveBack: () => (dots.classList.remove("on"), walk.classList.remove("on")),
     });
 
     const pin = (trigger, end, extra = {}) => ({ trigger, start: "top top", end, pin: true, scrub: 0.65, anticipatePin: 1, ...extra });
@@ -745,35 +824,22 @@
       if (kind === "disc") tl.to(U, { red: 1, swirl: 1.2, duration: 0.5 }, 0.05).to(U, { red: 0, swirl: 0, duration: 0.2 }, 0.8);
     };
 
-    // 7 · the map — the family arrives, the thread draws, the light gathers.
-    const mapScene = () => {
-    const nodes = $$(".node");
-    if (narrowMQ.matches) {
-      gsap.fromTo("#s-map .big--map", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.9, ease: "power3.out", scrollTrigger: { trigger: "#s-map", start: "top 75%", once: true } });
-      gsap.fromTo("#s-map .map__head .sub", { opacity: 0 }, { opacity: 1, duration: 0.8, scrollTrigger: { trigger: "#s-map", start: "top 70%", once: true } });
-      gsap.fromTo(nodes, { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.7, stagger: 0.09, ease: "power3.out", scrollTrigger: { trigger: "#s-map .map__nodes", start: "top 80%", once: true } });
-      gsap.timeline({ scrollTrigger: { trigger: "#s-map", start: "top 60%", end: "bottom 40%", scrub: 0.6 } })
-        .to(U, { gather: 1, duration: 0.3, ease: "power2.inOut" }, 0)
-        .to({}, { duration: 0.4 })
-        .to(U, { gather: 0, duration: 0.3 }, 0.7);
-      return;
-    }
-    gsap
-      .timeline({ scrollTrigger: pin("#s-map", "+=320%") })
-      .fromTo("#s-map .big--map", coarse ? { opacity: 0, scale: 1.6 } : { opacity: 0, scale: 2, filter: "blur(16px)" }, coarse ? { opacity: 1, scale: 1, duration: 0.2, ease: "power3.out" } : { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.2, ease: "power3.out" }, 0)
-      .fromTo("#s-map .map__head .sub", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.15 }, 0.1)
-      .to(U, { gather: 1, duration: 0.35, ease: "power2.inOut" }, 0.12)
-      .fromTo(nodes, { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.14, stagger: 0.09, ease: "back.out(1.6)" }, 0.22)
-      .fromTo("#thread-path", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease: "power1.inOut" }, 0.3)
-      .to({}, { duration: 0.2 }) // hold — every card is live and clickable here
-      .to(U, { gather: 0, duration: 0.2 }, 0.9)
-      .to("#s-map .map__head", { opacity: 0, y: -30, duration: 0.1 }, 0.9);
+    // 7 · the world — the head arrives, the globe rises, the field recedes.
+    const globeScene = () => {
+      gsap
+        .timeline({ scrollTrigger: pin("#s-globe", coarse ? "+=110%" : "+=150%") })
+        .fromTo("#s-globe .big--map", coarse ? { opacity: 0, scale: 1.5 } : { opacity: 0, scale: 1.9, filter: "blur(14px)" }, coarse ? { opacity: 1, scale: 1, duration: 0.18, ease: "power3.out" } : { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.18, ease: "power3.out" }, 0)
+        .fromTo("#s-globe .globe__head .sub", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.14 }, 0.08)
+        .fromTo("#globe-stage", { opacity: 0, scale: 0.86, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0.1)
+        .to(U, { dim: 0.3, swirl: 0.35, duration: 0.3 }, 0)
+        .to({}, { duration: 0.5 }) // the hold — spin it, tap a light, open a card
+        .to(U, { dim: 1, swirl: 0, duration: 0.1 }, 0.9);
     };
 
     $$(".scene").forEach((scene) => {
       if (scene.classList.contains("scene--words")) wordsScene(scene);
       else if (scene.classList.contains("scene--film")) filmScene(scene);
-      else if (scene.id === "s-map") mapScene();
+      else if (scene.id === "s-globe") globeScene();
     });
     ScrollTrigger.sort();
     ScrollTrigger.refresh();
@@ -808,10 +874,12 @@
   /* ================================================================ */
   /* boot                                                              */
   /* ================================================================ */
+  $("#hud").classList.add("on"); // the header is sticky from the first frame
   buildLangGroups();
   buildDots();
   buildRooms();
-  buildNodes();
+  buildMenu();
+  initGlobe();
   applyLang();
   watchDots();
   if (reduce) initScroll();
