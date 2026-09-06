@@ -256,7 +256,7 @@
     scenes.forEach((s) => {
       const b = document.createElement("button");
       b.type = "button";
-      b.addEventListener("click", () => s.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }));
+      b.addEventListener("click", () => goTo(scenes.indexOf(s)));
       dots.appendChild(b);
       dotFor.set(s, b);
     });
@@ -360,10 +360,45 @@
   const walkNext = $("#walk-next");
   const walkLabel = $("#walk-label");
   let here = 0;
+  let walking = null;
+  // Where a scene is "there": mid-room for footage (frame open, word centred),
+  // partway through the words, the map once the thread is drawn.
+  const LANDING = { "s-open": 0, "s-map": 0.62 };
+  const landingY = (s) => {
+    const st = window.ScrollTrigger && ScrollTrigger.getAll().find((t) => t.pin && t.trigger === s);
+    if (!st) return s.getBoundingClientRect().top + window.scrollY - (s.classList.contains("scene--flow") ? 0 : 0);
+    const f = LANDING[s.id] ?? (s.classList.contains("scene--words") ? 0.42 : 0.5);
+    return st.start + (st.end - st.start) * f;
+  };
+  const stopWalk = () => {
+    if (walking) walking.kill();
+    walking = null;
+  };
   const goTo = (i) => {
     const s = scenes[Math.max(0, Math.min(scenes.length - 1, i))];
-    s?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    if (!s) return;
+    if (reduce || !window.gsap || !window.ScrollTrigger) {
+      s.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      return;
+    }
+    stopWalk();
+    const from = window.scrollY;
+    const to = Math.max(0, Math.min(landingY(s), document.documentElement.scrollHeight - window.innerHeight));
+    const dist = Math.abs(to - from);
+    if (dist < 2) return;
+    // Slow out of the room, fast down the corridor, slow into the next — the
+    // same scrub the hand would produce, so the footage and the words play.
+    const pos = { y: from };
+    walking = gsap.to(pos, {
+      y: to,
+      duration: Math.min(3, 0.9 + dist / 2600),
+      ease: "power2.inOut",
+      onUpdate: () => window.scrollTo(0, pos.y),
+      onComplete: () => (walking = null),
+    });
   };
+  // Your own scroll wins over the walk, immediately.
+  ["wheel", "touchstart", "pointerdown"].forEach((ev) => window.addEventListener(ev, stopWalk, { passive: true }));
   const localizeWalk = () => {
     const t = I18N[lang];
     walkPrev.setAttribute("aria-label", t.room.prev);
@@ -380,7 +415,8 @@
   window.addEventListener("keydown", (e) => {
     if (e.target && /input|textarea/i.test(e.target.tagName)) return;
     if (e.key === "ArrowRight") (e.preventDefault(), goTo(here + 1));
-    if (e.key === "ArrowLeft") (e.preventDefault(), goTo(here - 1));
+    else if (e.key === "ArrowLeft") (e.preventDefault(), goTo(here - 1));
+    else stopWalk();
   });
 
   /* ================================================================ */
